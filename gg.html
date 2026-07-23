@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday!</title>
+  
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;600&display=swap" rel="stylesheet" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+      background: #11001c;
+    }
+
+    /* ------------------------------
+       1. WHITE OVERLAY & COUNTDOWN
+    ------------------------------ */
+    #white-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #ffffff;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 2s ease-in-out, visibility 2s ease-in-out;
+    }
+
+    #white-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader-text {
+      color: #7b2cbf;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      margin-top: 15px;
+      font-weight: 300;
+    }
+
+    .timer {
+      font-size: 3rem;
+      font-weight: 600;
+      color: #3c096c;
+    }
+
+    /* ------------------------------
+       2. PURPLE GLITTER BACKGROUND
+    ------------------------------ */
+    .purple-glitter-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #3c096c, #10002b);
+      z-index: 1;
+    }
+
+    #glitter-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+
+    /* ------------------------------
+       3. BIRTHDAY CONTENT
+    ------------------------------ */
+    .content-container {
+      position: relative;
+      z-index: 10;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .wish-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 24px;
+      padding: 40px 30px;
+      max-width: 550px;
+      box-shadow: 0 8px 32px 0 rgba(112, 0, 255, 0.37);
+      
+      /* Animation initial state */
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 2.5s ease-out 0.5s, transform 2.5s ease-out 0.5s;
+    }
+
+    .wish-card.reveal {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .wish-card h1 {
+      font-family: 'Dancing Script', cursive;
+      font-size: 3.8rem;
+      color: #e0aaff;
+      text-shadow: 0 0 15px rgba(224, 170, 255, 0.6);
+      margin-bottom: 15px;
+    }
+
+    .wish-card p {
+      color: #f3e8ff;
+      font-size: 1.1rem;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .highlight {
+      color: #ff9e00;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 30-Second White Screen Overlay -->
+  <div id="white-screen">
+    <div class="timer" id="countdown">30</div>
+    <div class="loader-text">SOMETHING SPECIAL IS LOADING...</div>
+  </div>
+
+  <!-- Purple Glitter Background Layer -->
+  <div class="purple-glitter-bg">
+    <canvas id="glitter-canvas"></canvas>
+  </div>
+
+  <!-- Main Birthday Wish Content -->
+  <div class="content-container">
+    <div class="wish-card" id="wishCard">
+      <h1>Happy Birthday! 🎉</h1>
+      <p>
+        May your day be filled with endless magic, laughter, and joy. 
+        Here’s to another wonderful year around the sun—sparkling bright 
+        and shining just as brilliantly as you do! ✨💜
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // --------------------------------------------------
+    // 1. COUNTDOWN & SCREEN TRANSITION (30 SECONDS)
+    // --------------------------------------------------
+    let timeLeft = 30;
+    const countdownEl = document.getElementById('countdown');
+    const whiteScreen = document.getElementById('white-screen');
+    const wishCard = document.getElementById('wishCard');
+
+    const timer = setInterval(() => {
+      timeLeft--;
+      countdownEl.textContent = timeLeft;
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        
+        // Hide white screen smoothly
+        whiteScreen.classList.add('fade-out');
+
+        // Reveal birthday wish card slowly
+        wishCard.classList.add('reveal');
+
+        // Start confetti animation
+        startConfetti();
+      }
+    }, 1000);
+
+    // --------------------------------------------------
+    // 2. PURPLE GLITTER CANVAS ANIMATION
+    // --------------------------------------------------
+    const canvas = document.getElementById('glitter-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let particles = [];
+    const particleCount = 120;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class GlitterParticle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2.5 + 0.5;
+        this.maxAlpha = Math.random() * 0.8 + 0.2;
+        this.alpha = 0;
+        this.speed = Math.random() * 0.02 + 0.005;
+        this.growing = true;
+        // Purple & Gold glitter color palette
+        const colors = ['224, 170, 255', '199, 125, 255', '157, 78, 221', '255, 215, 0'];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+      }
+
+      update() {
+        if (this.growing) {
+          this.alpha += this.speed;
+          if (this.alpha >= this.maxAlpha) this.growing = false;
+        } else {
+          this.alpha -= this.speed;
+          if (this.alpha <= 0) this.reset();
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new GlitterParticle());
+    }
+
+    function animateGlitter() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateGlitter);
+    }
+    animateGlitter();
+
+    // --------------------------------------------------
+    // 3. CONFETTI ANIMATION
+    // --------------------------------------------------
+    function startConfetti() {
+      const duration = 15 * 1000; // Confetti lasts 15 seconds
+      const animationEnd = Date.now() + duration;
+
+      const frame = () => {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.7 },
+          colors: ['#e0aaff', '#c77dff', '#ff9e00', '#ffffff']
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.7 },
+          colors: ['#e0aaff', '#c77dff', '#ff9e00', '#ffffff']
+        });
+
+        if (Date.now() < animationEnd) {
+          requestAnimationFrame(frame);
+        }
+      };
+
+      // Initial big burst
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+
+      frame();
+    }
+  </script>
+</body>
+</html>
